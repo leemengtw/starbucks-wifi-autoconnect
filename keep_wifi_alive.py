@@ -1,13 +1,14 @@
-"""
-References
-- https://stackoverflow.com/questions/37313958/turn-on-off-wifi-with-python-on-osx
-"""
-
 import os
 import time
 import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+
+try:
+    import httplib
+except:
+    import http.client as httplib
+
 
 TEST_URL = "http://www.google.com"
 CONNECTIVITY_CHECK_SECONDS = 10
@@ -19,7 +20,7 @@ def main():
         time.sleep(CONNECTIVITY_CHECK_SECONDS)
 
         # check wifi connectivity
-        if not network_alive:
+        if not network_alive():
             # toggle wifi setting for osx
             print("Network is dead, turn off and on wifi..")
             os.system("networksetup -setairportpower airport off")
@@ -34,12 +35,19 @@ def main():
 
 
 def network_alive():
-    """Check internet connectivity by accessing random page
+    """Check internet connectivity by making a HEAD request to google
     :return:
         bool: indicate network is alive or not
     """
-    res = requests.request(method='GET', url=TEST_URL)
-    return True if res.status_code == 200 else False
+    conn = httplib.HTTPConnection(TEST_URL.replace('http://', ''), timeout=5)
+    try:
+        conn.request("HEAD", "/")
+        alive = True
+    except:
+        alive = False
+    finally:
+        conn.close()
+        return alive
 
 
 def login_to_starbucks():
@@ -51,7 +59,9 @@ def login_to_starbucks():
         driver = get_chrome_driver()
 
         driver.get(TEST_URL)
+        driver.implicitly_wait(10)
         driver.find_element(By.ID, 'button_next_page').click()
+        driver.implicitly_wait(1)
         driver.find_element(By.ID, 'button_accept').click()
     finally:
         print("Shut down driver..")
