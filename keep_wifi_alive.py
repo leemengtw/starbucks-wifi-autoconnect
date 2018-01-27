@@ -3,6 +3,9 @@ import time
 import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import TimeoutException
 
 try:
     import httplib
@@ -10,7 +13,7 @@ except:
     import http.client as httplib
 
 
-TEST_URL = "http://www.python.org"
+TEST_URL = "http://www.google.com"
 CONNECTIVITY_CHECK_SECONDS = 10
 
 
@@ -69,9 +72,17 @@ def login_to_starbucks():
 
         driver.get(TEST_URL)
         driver.implicitly_wait(10)
+
+        delay_seconds = 30
+        WebDriverWait(driver, delay_seconds).until(EC.presence_of_element_located((By.ID, 'button_next_page')))
         driver.find_element(By.ID, 'button_next_page').click()
         driver.implicitly_wait(1)
         driver.find_element(By.ID, 'button_accept').click()
+
+
+    except TimeoutException:
+        print("Take longer than {} seconds to load page.".format(delay_seconds))
+
     finally:
         print("Shut down driver..")
         driver.quit()
