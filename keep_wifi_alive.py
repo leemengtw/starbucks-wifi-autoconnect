@@ -80,7 +80,9 @@ def login_to_starbucks():
 def get_chrome_driver():
     """Return a selenium driver using Chrome
     """
-    return webdriver.Chrome("drivers/chromedriver")
+    options = webdriver.ChromeOptions()
+    options.add_argument("headless")
+    return webdriver.Chrome("drivers/chromedriver", chrome_options=options)
 
 
 if __name__ == '__main__':
