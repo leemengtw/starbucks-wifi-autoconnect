@@ -9,7 +9,7 @@ from selenium.common.exceptions import TimeoutException
 
 try:
     import httplib
-except:
+except ModeuleNotFouldError:
     import http.client as httplib
 
 
@@ -33,7 +33,6 @@ def main():
             # check whether the connectivity recovered after toggling wifi
             if not network_alive():
                 print("Need re-login, start login process..")
-                time.sleep(5)
                 login_to_starbucks()
         else:
             print("Network still working, keep productive!")
@@ -41,17 +40,20 @@ def main():
 
 def network_alive():
     """Check internet connectivity by making a HEAD request to google
-    :return:
-        bool: indicate network is alive or not
+
+    Returns
+    -------
+    bool : indicate network is alive or not
     """
     conn = httplib.HTTPConnection(TEST_URL.replace('http://', ''), timeout=1)
+    alive = False
     try:
         # first check we can get response from Google
         conn.request("GET", "/")
         # second check it's not a redirected page
         r1 = conn.getresponse()
         print(r1.status)
-        if r1.status not in [301]:
+        if r1.status not in [302, 200]:
             alive = False
         else:
             alive = True
@@ -63,22 +65,16 @@ def network_alive():
 
 
 def login_to_starbucks():
+    """Open Chrome and login to starbucks for wifi usage
     """
-    Open Chrome and login to starbucks for wifi usage
-    :return:
-    """
+    delay_seconds = 10
+    driver = get_chrome_driver()
     try:
-        driver = get_chrome_driver()
-
         driver.get(TEST_URL)
-        driver.implicitly_wait(10)
-
-        delay_seconds = 30
         WebDriverWait(driver, delay_seconds).until(EC.presence_of_element_located((By.ID, 'button_next_page')))
         driver.find_element(By.ID, 'button_next_page').click()
         driver.implicitly_wait(1)
         driver.find_element(By.ID, 'button_accept').click()
-
 
     except TimeoutException:
         print("Take longer than {} seconds to load page.".format(delay_seconds))
@@ -89,8 +85,7 @@ def login_to_starbucks():
 
 
 def get_chrome_driver():
-    """Return a selenium driver using Chrome
-    """
+    """Return a selenium driver using Chrome"""
     options = webdriver.ChromeOptions()
     options.add_argument("headless")
     return webdriver.Chrome("drivers/chromedriver", chrome_options=options)
